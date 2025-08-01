@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PWD Verifier</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      background: url('HAHAHA.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background-color: #6c40d4;
+      padding: 1rem 2rem;
+      text-align: center;
+      font-size: 2rem;
+      font-weight: bold;
+      color: white;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 2rem;
+    }
+
+    p {
+      background-color: rgba(0,0,0,0.4);
+      padding: 10px 20px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    #rfidInput {
+      padding: 15px 25px;
+      font-size: 1.2rem;
+      border-radius: 10px;
+      border: 2px solid #ccc;
+      outline: none;
+      width: 100%;
+      max-width: 300px;
+      text-align: center;
+    }
+
+    #formContainer {
+      display: none;
+      background-color: rgba(255,255,255,0.95);
+      color: #000;
+      padding: 20px;
+      margin-top: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+      width: 100%;
+      max-width: 500px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+
+    input[type="text"], input[type="number"] {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      background-color: #6c40d4;
+      color: white;
+      font-size: 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background-color: #5231a6;
+    }
+
+    footer {
+      background-color: #6c40d4;
+      color: white;
+      text-align: center;
+      padding: 1rem;
+      font-size: 0.9rem;
+      margin-top: auto;
+    }
+
+    #verifiedPopup {
+      display: none;
+      position: absolute;
+      top: 20%;
+      left: 5%;
+      background-color: rgba(0, 255, 0, 0.85);
+      color: black;
+      padding: 20px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      border-radius: 10px;
+      z-index: 1000;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+      white-space: pre-line;
+      width: 90%;
+      max-width: 250px;
+    }
+
+    /* Responsive Styles */
+    @media screen and (max-width: 600px) {
+      header {
+        font-size: 1.5rem;
+        padding: 0.8rem 1rem;
+      }
+
+      #rfidInput {
+        font-size: 1rem;
+        padding: 10px 20px;
+      }
+
+      #verifiedPopup {
+        font-size: 1rem;
+        top: 15%;
+        left: 5%;
+      }
+
+      .container {
+        padding: 1rem;
+      }
+
+      button {
+        font-size: 0.95rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>PWD Verifier</header>
+
+  <div class="container">
+    <p>Please plug your RFID reader and click the input box to start verification.</p>
+    <input type="text" id="rfidInput" placeholder="Scan RFID..." onkeydown="checkRFID(event)">
+
+    <div id="formContainer">
+      <h2>Register New PWD</h2>
+      <form id="registerForm">
+        <label>First Name</label>
+        <input type="text" name="fname" required>
+        <label>Last Name</label>
+        <input type="text" name="lname" required>
+        <label>Middle Initial</label>
+        <input type="text" maxlength="1" name="mi">
+        <label>Suffix</label>
+        <input type="text" name="suffix">
+        <label>Age</label>
+        <input type="number" min="1" name="age" required>
+        <label>Occupation</label>
+        <input type="text" name="occupation">
+        <label>Sex</label>
+        <input type="text" name="sex" required>
+        <label>Ailment</label>
+        <input type="text" name="ailment" required>
+        <label>Address</label>
+        <input type="text" name="address" required>
+        <button type="submit">Submit</button>
+      </form>
+    </div>
+  </div>
+
+  <footer>
+    &copy; 2025 PWD Verifier System , Made by Mark Tranquil B. Dagano
+  </footer>
+
+  <div id="verifiedPopup"></div>
+
+  <script>
+    let currentRFID = '';
+
+    function checkRFID(event) {
+      if (event.key === "Enter") {
+        currentRFID = event.target.value.trim();
+        if (!currentRFID) return;
+
+        let registeredCards = JSON.parse(sessionStorage.getItem("registeredCards") || "{}");
+
+        if (registeredCards[currentRFID]) {
+          showDataPopup(registeredCards[currentRFID]);
+        } else {
+          const confirmReg = confirm("Card not recognized. Do you want to register?");
+          if (confirmReg) {
+            document.getElementById("formContainer").style.display = "block";
+          }
+        }
+
+        event.target.value = "";
+      }
+    }
+
+    document.getElementById("registerForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const formData = new FormData(e.target);
+      const newUser = {};
+      formData.forEach((val, key) => {
+        newUser[key] = val;
+      });
+
+      let registeredCards = JSON.parse(sessionStorage.getItem("registeredCards") || "{}");
+      registeredCards[currentRFID] = newUser;
+      sessionStorage.setItem("registeredCards", JSON.stringify(registeredCards));
+
+      alert("Registration successful for " + newUser.fname + "!");
+      document.getElementById("formContainer").style.display = "none";
+      e.target.reset();
+    });
+
+    function showDataPopup(data) {
+      const popup = document.getElementById("verifiedPopup");
+      popup.innerText =
+        `Name: ${data.fname} ${data.mi || ''}. ${data.lname} ${data.suffix || ''}
+Age: ${data.age}
+Occupation: ${data.occupation}
+Sex: ${data.sex}
+Ailment: ${data.ailment}
+Address: ${data.address}`;
+      popup.style.display = "block";
+      setTimeout(() => {
+        popup.style.display = "none";
+      }, 4000);
+    }
+  </script>
+</body>
+</html>
